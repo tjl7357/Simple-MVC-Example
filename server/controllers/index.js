@@ -1,6 +1,7 @@
 // pull in our models. This will automatically load the index.js from that folder
 const models = require('../models');
-const Cat = models.Cat;
+
+const { Cat } = models;
 
 // default fake data so that we have something to work with until we make a real Cat
 const defaultData = {
@@ -15,17 +16,17 @@ const hostIndex = (req, res) => {
   res.render('index', {
     currentName: lastAdded.name,
     title: 'Home',
-    pageName: 'Home Page'
+    pageName: 'Home Page',
   });
 };
 
 const hostPage1 = async (req, res) => {
   try {
     const docs = await Cat.find({}).lean().exec();
-    return res.render('page1', {cats: docs});
+    return res.render('page1', { cats: docs });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({error: 'Could not get Cats'});
+    return res.status(500).json({ error: 'Could not get Cats' });
   }
 };
 
@@ -38,14 +39,14 @@ const hostPage3 = (req, res) => {
 };
 
 const getName = (req, res) => {
-  res.json({name: lastAdded.name});
+  res.json({ name: lastAdded.name });
 };
 
 const setName = async (req, res) => {
   if (!req.body.firstname || !req.body.lastname || !req.body.beds) {
     return res.status(400).json({ error: 'firstname,lastname and beds are all required' });
   }
-  
+
   const catData = {
     name: `${req.body.firstname} ${req.body.lastname}`,
     bedsOwned: req.body.beds,
@@ -61,20 +62,45 @@ const setName = async (req, res) => {
       name: lastAdded.name,
       beds: lastAdded.bedsOwned,
     });
-  } catch (err){
+  } catch (err) {
     console.log(err);
-    return res.status(500).json({error: 'Failed to create cat'});
+    return res.status(500).json({ error: 'Failed to create cat' });
   }
 };
 
-const searchName = (req, res) => {
+const searchName = async (req, res) => {
   if (!req.query.name) {
     return res.status(400).json({ error: 'Name is required to perform a search' });
+  }
+
+  const query = {
+    name: req.query.name,
+  };
+
+  try {
+    const doc = await Cat.findOne(query).select('name bedsOwned').exec();
+
+    if (!doc) {
+      return res.json({ error: 'No Cat Found' });
+    }
+
+    return res.json({ name: doc.name, beds: doc.bedsOwned });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: 'Error querying cat from databse' });
   }
 };
 
 const updateLast = (req, res) => {
-	
+  lastAdded.bedsOwned++;
+
+  lastAdded.save().then(() => res.json({
+    name: lastAdded.name,
+    beds: lastAdded.bedsOwned,
+  })).catch((err) => {
+    console.log(err);
+    return res.status(500).json({ error: 'Failed to update last added!' });
+  });
 };
 
 const notFound = (req, res) => {

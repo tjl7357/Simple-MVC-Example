@@ -12,7 +12,7 @@ const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 // Connect to Mongoose
 const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/simpleMVCExample';
-mongoose.connect(dbURI).catch(err => {
+mongoose.connect(dbURI).catch((err) => {
   if (err) {
     console.log('Could not Connect to Database');
     throw err;
@@ -43,4 +43,3 @@ app.listen(port, (err) => {
   }
   console.log(`Listening on port ${port}`);
 });
-
